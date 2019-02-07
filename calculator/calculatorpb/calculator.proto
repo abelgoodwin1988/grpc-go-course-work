@@ -1,0 +1,34 @@
+syntax="proto3";
+
+package sum;
+option go_package="calculatorpb";
+
+message SumRequest {
+    repeated int32 sum = 1;
+}
+
+message SumResponse {
+    int32 sum = 1;
+}
+
+message PrimeNumberDecomponsitionRequest {
+    int32 number = 1;
+}
+
+message PrimeNumberDecomponsitionResponse {
+    int32 decomposition = 1;
+}
+
+message ComputeAverageRequest {
+    int32 averageSubject = 1;
+}
+
+message ComputeAverageResponse {
+    int32 average = 1;
+}
+
+service CalculatorService {
+    rpc Sum(SumRequest) returns(SumResponse) {};
+    rpc PrimeNumberDecomposition(PrimeNumberDecomponsitionRequest) returns(stream PrimeNumberDecomponsitionResponse) {};
+    rpc ComputeAverage(stream ComputeAverageRequest) returns(ComputeAverageResponse) {};
+}

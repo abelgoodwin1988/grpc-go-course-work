@@ -26,6 +26,50 @@ func main() {
 	doServerStreaming(c)
 
 	doClientStreaming(c)
+
+	doBidirectionalStreaming(c)
+}
+
+func doBidirectionalStreaming(c greetpb.GreetServiceClient) {
+	fmt.Println("Start bidirectional streaming RPC")
+	stream, err := c.GreetEveryone(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to open stream to server: %v", err)
+		return
+	}
+
+	requests := _request
+
+	waitc := make(chan struct{})
+	// We send messages to the server
+	go func() {
+		// Function to send messages
+		for _, req := range requests {
+			fmt.Printf("Sending Message: %v\n", req)
+			stream.Send(req)
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+	// We receive messages from the server
+	go func() {
+		// Function to receive messages
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Err while receiving from server: %v\n", err)
+				break
+			}
+			fmt.Printf("Received: %v\n", res.GetResult())
+		}
+		close(waitc)
+	}()
+
+	// block unti leverything is done
+	<-waitc
 }
 
 func doClientStreaming(c greetpb.GreetServiceClient) {
@@ -94,4 +138,47 @@ func doUnary(c greetpb.GreetServiceClient) {
 		log.Fatal("Error while calling Greeting RPC: %v", err)
 	}
 	log.Printf("Response from Greet: %v", res.Result)
+}
+
+var _request = []*greetpb.GreetEveryoneRequest{
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Abel",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Stephen",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Kyle",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Daniel",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Brian",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Brett",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Lee",
+		},
+	},
+	&greetpb.GreetEveryoneRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Peyton",
+		},
+	},
 }

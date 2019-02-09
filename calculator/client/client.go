@@ -34,6 +34,51 @@ func main() {
 	GetPrimeDecomposition(c)
 
 	GetComputeAverage(c)
+
+	FindMaximum(c)
+}
+
+func FindMaximum(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Started FindMaximum")
+	// open stream
+	stream, err := c.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf("Failed to open BiDi Stream to Server", err)
+	}
+	waitc := make(chan struct{})
+	// send
+	maxes := []int32{1, 15, 2, 4, 17, 2, 15, 17, 20, 21, 23, 50, 10}
+	go func() {
+		for _, val := range maxes {
+			sendErr := stream.Send(&calculatorpb.FindMaximumRequest{
+				Number: val,
+			})
+			if sendErr != nil {
+				log.Fatalf("Failed to send value to server: %v", err)
+			}
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+
+	// receive
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				fmt.Println("End of responses from server stream")
+				break
+			}
+			if err != nil {
+				log.Fatalf("Failed to receive message from server stream: %v", err)
+			}
+			fmt.Printf("Current Max: %v\n", res.GetMax())
+		}
+		close(waitc)
+	}()
+
+	<-waitc
+	// block
 }
 
 func GetComputeAverage(c calculatorpb.CalculatorServiceClient) {

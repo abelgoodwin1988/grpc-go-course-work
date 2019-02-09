@@ -26,6 +26,33 @@ func (*server) Sum(ctx context.Context, in *calculatorpb.SumRequest) (*calculato
 	return res, nil
 }
 
+func (*server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServer) error {
+	var max int32
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			stream.Send(&calculatorpb.FindMaximumResponse{
+				Max: max,
+			})
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Failure to receive request from client stream: %v", err)
+			return err
+		}
+		if max < req.GetNumber() {
+			max = req.GetNumber()
+			sendErr := stream.Send(&calculatorpb.FindMaximumResponse{
+				Max: max,
+			})
+			if sendErr != nil {
+				log.Fatalf("Failed to send value to client via stream: $v", err)
+				return err
+			}
+		}
+	}
+}
+
 func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecomponsitionRequest, stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
 	fmt.Printf("PrimeNumberDecomposition function invoked with: %v\n", req)
 	number := req.GetNumber()

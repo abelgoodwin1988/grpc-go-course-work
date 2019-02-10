@@ -35,9 +35,22 @@ message FindMaximumResponse {
     int32 max = 1;
 }
 
+message SquareRootRequest {
+    int32 number = 1;
+}
+
+message SquareRootResponse {
+    double nummber_root = 1;
+}
+
 service CalculatorService {
     rpc Sum(SumRequest) returns(SumResponse) {};
     rpc PrimeNumberDecomposition(PrimeNumberDecomponsitionRequest) returns(stream PrimeNumberDecomponsitionResponse) {};
     rpc ComputeAverage(stream ComputeAverageRequest) returns(ComputeAverageResponse) {};
     rpc FindMaximum(stream FindMaximumRequest) returns(stream FindMaximumResponse) {};
+
+    // error handling
+    // This RPC will throw an exception if the sent number is engative
+    //  The error being sent is of type INVALID_ARGUMENT
+    rpc SquareRoot(SquareRootRequest) returns(SquareRootResponse) {};
 }

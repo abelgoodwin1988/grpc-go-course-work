@@ -7,9 +7,12 @@ import (
 	"log"
 	"time"
 
+	"google.golang.org/grpc/codes"
+
 	"github.com/abelgoodwin1988/grpc-go-course-work/calculator/calculatorpb"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -31,11 +34,42 @@ func main() {
 	}
 	log.Printf("Result from Summing [%v]: %v", req, res)
 
-	GetPrimeDecomposition(c)
+	// GetPrimeDecomposition(c)
 
-	GetComputeAverage(c)
+	// GetComputeAverage(c)
 
-	FindMaximum(c)
+	// FindMaximum(c)
+
+	doErrorUnary(c)
+}
+
+func doErrorUnary(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a SquareRoot Unary RPC...")
+	// Correct Call
+	doErrorCall(c, 10)
+	// Error call
+	doErrorCall(c, -10)
+}
+
+func doErrorCall(c calculatorpb.CalculatorServiceClient, n int32) {
+	res, err := c.SquareRoot(context.Background(), &calculatorpb.SquareRootRequest{Number: n})
+	if err != nil {
+		resErr, ok := status.FromError(err)
+		if ok {
+			// Actual error from gRPC (user error)
+			fmt.Println(resErr.Message())
+			fmt.Println(resErr.Code())
+			if resErr.Code() == codes.InvalidArgument {
+				fmt.Println("We probably sent a negative number.")
+			}
+			return
+		} else {
+			// Other error, frameowkr.
+			log.Fatalf("Big Error calling SquareRoot: %v", err)
+			return
+		}
+	}
+	fmt.Printf("Result of Sqrt of number %v: %v\n", n, res.GetNummberRoot())
 }
 
 func FindMaximum(c calculatorpb.CalculatorServiceClient) {
